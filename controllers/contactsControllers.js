@@ -1,4 +1,4 @@
-import contactsServices from "../services/contactsServices.js";
+import contactsServices from '../services/contactsServices.js';
 
 
 import HttpError from "../helpers/HttpError.js";
@@ -40,8 +40,7 @@ export const deleteContact = async (req, res, next) => {
 
 export const createContact = async (req, res, next) => {
     try {
-        const { name, email, phone } = req.body;
-        const newContact = await contactsServices.addContact(name, email, phone);
+        const newContact = await contactsServices.addContact(req.body);
         res.status(201).json(newContact);
     } catch (error) {
         next(error);
@@ -63,6 +62,19 @@ export const updateContact = async (req, res, next) => {
         }
 
         res.status(200).json(updated);
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const updateFavorite = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const data = await contactsServices.updateFavorite(id, req.body);
+        if (!data) {
+            return  next(HttpError(404));
+        }
+        res.json(data);
     } catch (error) {
         next(error);
     }
