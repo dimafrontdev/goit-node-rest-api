@@ -1,13 +1,11 @@
 import Contact from '../db/models/Contact.js';
-import { nanoid } from 'nanoid';
 
 export const listContacts = () => Contact.findAll();
 
 export const getContactById = id => Contact.findByPk(id);
 
 export const addContact = data => {
-    const id = nanoid();
-    return Contact.create({ id, ...data });
+    return Contact.create(data);
 }
 
 export const removeContact = async (id) => {
