@@ -19,11 +19,15 @@ const Contact = sequelize.define('Contact', {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
     },
+    owner: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+    }
 }, {
     tableName: 'contacts',
     timestamps: false
 });
 
-await Contact.sync()
+await Contact.sync({ alter: true })
 
 export default Contact;
