@@ -14,8 +14,11 @@ import {
   updateContactSchema,
   updateFavoriteSchema,
 } from '../schemas/contactsSchemas.js';
+import auth from '../helpers/auth.js';
 
 const router = express.Router();
+
+router.use(auth);
 
 router.get("/", getAllContacts);
 
