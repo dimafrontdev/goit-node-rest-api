@@ -33,8 +33,14 @@ export const login = async data => {
   }
 
   const token = generateToken({ email });
-  await user.update({ token });
-  return { token };
+  const updatedUser = await user.update({ token }, { returning: true });
+  return {
+    token,
+    user: {
+      email: updatedUser.email,
+      subscription: updatedUser.subscription,
+    },
+  };
 };
 
 export const logout = async id => {
