@@ -2,6 +2,7 @@ import User from '../db/models/User.js';
 import HttpError from '../helpers/HttpError.js';
 import bcrypt from 'bcrypt';
 import { generateToken } from '../helpers/jwt.js';
+import gravatar from 'gravatar';
 
 export const getUserByEmail = async email =>
   await User.findOne({ where: { email } });
@@ -16,7 +17,8 @@ const register = async data => {
   }
 
   const hashPassword = await bcrypt.hash(password, 10);
-  return User.create({ ...data, password: hashPassword });
+  const avatar = gravatar.url(email, { s: '150' }, true);
+  return User.create({ ...data, password: hashPassword, avatarURL: avatar });
 };
 
 export const login = async data => {
@@ -53,5 +55,17 @@ export const logout = async id => {
   await user.update({ token: null });
 };
 
-const authServices = { register, login, logout };
+export const updateUser = async (id, data) => {
+  const user = await getUserById(id);
+
+  if (!user) {
+    throw HttpError(401, 'User not found');
+  }
+
+  return user.update(data, {
+    returning: true,
+  });
+};
+
+const authServices = { register, login, logout, updateUser };
 export default authServices;
