@@ -3,9 +3,13 @@ import HttpError from '../helpers/HttpError.js';
 import bcrypt from 'bcrypt';
 import { generateToken } from '../helpers/jwt.js';
 import gravatar from 'gravatar';
+import { nanoid } from 'nanoid';
+import { sendVerificationEmail } from './emailService.js';
 
 export const getUserByEmail = async email =>
   await User.findOne({ where: { email } });
+export const getUserByQuery = async query =>
+  await User.findOne({ where: query });
 export const getUserById = async userId => await User.findByPk(userId);
 
 const register = async data => {
@@ -18,7 +22,16 @@ const register = async data => {
 
   const hashPassword = await bcrypt.hash(password, 10);
   const avatar = gravatar.url(email, { s: '150' }, true);
-  return User.create({ ...data, password: hashPassword, avatarURL: avatar });
+  const verificationToken = nanoid();
+  const newUser = await User.create({
+    ...data,
+    password: hashPassword,
+    avatarURL: avatar,
+    verificationToken,
+  });
+
+  await sendVerificationEmail(email, verificationToken);
+  return newUser;
 };
 
 export const login = async data => {
@@ -32,6 +45,10 @@ export const login = async data => {
   const isPasswordValid = await bcrypt.compare(password, user.password);
   if (!isPasswordValid) {
     throw HttpError(401, 'Email or password is incorrect');
+  }
+
+  if (!user.verify) {
+    throw HttpError(401, 'Email is not verified');
   }
 
   const token = generateToken({ email });
@@ -67,5 +84,39 @@ export const updateUser = async (id, data) => {
   });
 };
 
-const authServices = { register, login, logout, updateUser };
+export const verifyUser = async verificationToken => {
+  const user = await getUserByQuery({ verificationToken });
+
+  if (!user) {
+    throw HttpError(404, 'User not found');
+  }
+
+  user.update({
+    verificationToken: null,
+    verify: true,
+  });
+};
+
+export const sendVerification = async email => {
+  const user = await getUserByEmail(email);
+
+  if (!user) {
+    throw HttpError(404, 'User not found');
+  }
+
+  if (user.verify) {
+    throw HttpError(400, 'Verification has already been passed');
+  }
+
+  await sendVerificationEmail(email, user.verificationToken);
+};
+
+const authServices = {
+  register,
+  login,
+  logout,
+  updateUser,
+  verifyUser,
+  sendVerification,
+};
 export default authServices;

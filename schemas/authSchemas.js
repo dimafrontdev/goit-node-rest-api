@@ -29,3 +29,11 @@ export const loginSchema = Joi.object({
     'string.min': 'Password must be at least 6 characters long',
   }),
 });
+
+export const verifySchema = Joi.object({
+  email: Joi.string().email().required().messages({
+    'any.required': 'Missing required email field',
+    'string.email': 'Email must be a valid email',
+    'string.empty': 'Email cannot be empty',
+  }),
+});
